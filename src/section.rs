@@ -1,10 +1,14 @@
 //! Pertains to information about a specific section.
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use crate::section::schema::{
     CatalogRequirementGroups, CourseSection, EnrollmentOptions, EnrollmentStatus, MeetingMap,
     PackageEnrollmentStatus, Status,
 };
 use reqwest::get;
 use reqwest::Error as ReqwestError;
+
 
 const SECTION_GET_URI_BASE: &str =
     "https://public.enroll.wisc.edu/api/search/v1/enrollmentPackages";
