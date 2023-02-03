@@ -1,8 +1,5 @@
 use crate::section::{get_section_info, SECTION_GET_URI_BASE};
-use crate::section::schema::{
-    EnrollmentStatus,
-    PackageEnrollmentStatus,
-};
+use crate::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
 use std::error::Error;
 use clap::Parser;
 use crate::config::{Action, Args};
@@ -21,7 +18,7 @@ mod config {
     
     #[derive(Debug, Subcommand, PartialEq)]
     pub enum Action {
-        Section {
+        Section{
             #[clap(value_parser)]
             subject_code: String,
     
@@ -69,7 +66,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // println!("{:#?}", &course_sections);
         
         println!("listing important section information for course id {course_id}..");
+        
+        if course_sections.len() == 0 {
+            eprintln!("No sections found.")
+        }
+    
         for c in &course_sections {
+    
+            let CourseSection { sections, .. } = &c;
             let PackageEnrollmentStatus { status, .. } = &c.package_enrollment_status;
             let EnrollmentStatus {
                 currentlyEnrolled: currently_enrolled,
@@ -78,11 +82,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 waitlistCurrentSize: waitlist_current_size,
                 ..
             } = &c.enrollment_status;
+    
+            // ..some course formatting
+            let mut meet_detail_str = String::new();
+            for (i, sec) in sections.iter().enumerate() {
+                meet_detail_str.push_str(format!("{} {}", sec.assembly_type, sec.section_number).as_str());
+                if i != sections.len()-1 { // if not the last element, separate with comma
+                    meet_detail_str.push_str(", ");
+                }
+            }
             
+            // now print out the course detail
             println!(
-                "section #{}:\t{}\t\t({}/{} seats, {}/{} waitlisted)",
-                c.id, status, currently_enrolled, capacity, waitlist_current_size, waitlist_capacity
+                "  {}:  {}  ({}/{} seats, {}/{} waitlisted)",
+                meet_detail_str, status, currently_enrolled, capacity, waitlist_current_size, waitlist_capacity
             );
+            
+            
         }
         
     } else {
