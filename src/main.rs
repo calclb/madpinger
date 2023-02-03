@@ -2,7 +2,6 @@ use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 use madpinger::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
 use std::error::Error;
 use clap::Parser;
-use madpinger::config::{Action, Args};
 use crate::config::{Action, Args};
 
 mod section;

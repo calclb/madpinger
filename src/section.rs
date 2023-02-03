@@ -37,29 +37,6 @@ pub mod schema {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct CourseSection {
-<<<<<<< HEAD
-        pub(crate) id: String,
-        pub(crate) term_code: String,
-        pub(crate) subject_code: String,
-        pub(crate) catalog_number: String,
-        pub(crate) enrollment_class_number: usize,
-        pub(crate) package_enrollment_status: PackageEnrollmentStatus,
-        pub(crate) credit_range: String,
-        pub(crate) class_meetings: Vec<ClassMeeting>,
-        pub(crate) instructor_provided_class_details: Option<String>,
-        pub(crate) published: bool,
-        pub(crate) class_permission_number_enabled: bool,
-        pub(crate) sections: Vec<Section>,
-        pub(crate) enrollment_options: EnrollmentOptions,
-        pub(crate) last_updated: u64,
-        pub(crate) enrollment_status: EnrollmentStatus,
-        pub(crate) meeting_map: MeetingMap,
-        pub(crate) online_only: bool,
-        pub(crate) enrollment_requirement_groups: Option<CatalogRequirementGroups>,
-        pub(crate) is_asynchronous: bool,
-        pub(crate) modes_of_instruction: Vec<String>,
-        pub(crate) doc_id: String,
-=======
         pub id: String,
         pub term_code: String,
         pub subject_code: String,
@@ -81,37 +58,19 @@ pub mod schema {
         pub is_asynchronous: bool,
         pub modes_of_instruction: Vec<String>,
         pub doc_id: String,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PackageEnrollmentStatus {
-<<<<<<< HEAD
-        pub(crate) available_seats: Option<usize>,
-        pub(crate) waitlist_total: usize,
-        pub(crate) status: Status,
-=======
         pub available_seats: Option<usize>,
         pub waitlist_total: usize,
         pub status: Status,
->>>>>>> main
     }
     
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassMeeting {
-<<<<<<< HEAD
-        pub(crate) meeting_or_exam_number: String,
-        pub(crate) meeting_type: MeetingType,
-        pub(crate) meeting_time_start: u64,
-        pub(crate) meeting_time_end: u64,
-        pub(crate) meeting_days: Option<String>,
-        pub(crate) meeting_days_list: Vec<String>,
-        pub(crate) building: Option<Building>,
-        pub(crate) room: Option<String>,
-        pub(crate) exam_date: Option<u64>,
-=======
         pub meeting_or_exam_number: String,
         pub meeting_type: MeetingType,
         pub meeting_time_start: u64,
@@ -121,62 +80,23 @@ pub mod schema {
         pub building: Option<Building>,
         pub room: Option<String>,
         pub exam_date: Option<u64>,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     // TODO consider refactoring as enum (oncampus, offcampus: for off campus locations) to eliminate options
     pub struct Building {
-<<<<<<< HEAD
-        pub(crate) building_code: String,
-        pub(crate) building_name: String,
-        pub(crate) street_address: Option<String>,
-        pub(crate) latitude: Option<f64>,
-        pub(crate) longitude: Option<f64>,
-        pub(crate) location: Option<Vec<f64>>, // (f64, f64)
-=======
         pub building_code: String,
         pub building_name: String,
         pub street_address: Option<String>,
         pub latitude: Option<f64>,
         pub longitude: Option<f64>,
         pub location: Option<Vec<f64>>, // (f64, f64)
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Section {
-<<<<<<< HEAD
-        pub(crate) class_unique_id: ClassUniqueId,
-        pub(crate) published: bool,
-        // pub(crate) topic: Option<?>
-        pub(crate) start_date: u64,
-        pub(crate) end_date: u64,
-        pub(crate) active: bool,
-        pub(crate) session_code: String, // e,g, "A1"
-        pub(crate) subject: Subject,
-        pub(crate) catalog_number: String,
-        pub(crate) course_id: String,
-        #[serde(rename = "type")]
-        pub(crate) assembly_type: AssemblyType, // LAB, LEC, DIS
-        pub(crate) section_number: String,
-        // honors: Option<_>, // TODO what type?
-        pub(crate) com_b: bool,
-        pub(crate) graded_component: bool,
-        pub(crate) instruction_mode: String,
-        pub(crate) add_consent: Consent,
-        pub(crate) drop_consent: Consent,
-        pub(crate) cross_listing: Option<String>,
-        pub(crate) class_meetings: Vec<ClassMeeting>,
-        // classAttributes: Vec<_>, // TODO what type?
-        pub(crate) enrollment_status: EnrollmentStatus,
-        pub(crate) footnotes: Vec<String>,
-        pub(crate) class_materials: Vec<ClassMaterials>,
-        pub(crate) instructors: Vec<PersonAttributes>,
-        pub(crate) instructor: Option<Instructor>, // basically a wrapper type of PersonAttributes
-=======
         pub class_unique_id: ClassUniqueId,
         pub published: bool,
         // pub topic: Option<?>
@@ -204,39 +124,18 @@ pub mod schema {
         pub class_materials: Vec<ClassMaterials>,
         pub instructors: Vec<PersonAttributes>,
         pub instructor: Option<Instructor>, // basically a wrapper type of PersonAttributes
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassUniqueId {
-<<<<<<< HEAD
-        pub(crate) term_code: String,
-        pub(crate) class_number: usize,
-=======
         pub term_code: String,
         pub class_number: usize,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Subject {
-<<<<<<< HEAD
-        pub(crate) term_code: String,
-        pub(crate) subject_code: String,
-        pub(crate) description: String,
-        pub(crate) short_description: String,
-        pub(crate) formal_description: String,
-        #[serde(rename = "undergraduateCatalogURI")]
-        pub(crate) undergraduate_catalog_uri: String,
-        #[serde(rename = "departmentURI")]
-        pub(crate) department_uri: String,
-        pub(crate) udds_funding_source: String,
-        pub(crate) school_college: SchoolCollege,
-        pub(crate) footnotes: Vec<String>,
-        pub(crate) department_owner_academic_org_code: String,
-=======
         pub term_code: String,
         pub subject_code: String,
         pub description: String,
@@ -250,20 +149,11 @@ pub mod schema {
         pub school_college: SchoolCollege,
         pub footnotes: Vec<String>,
         pub department_owner_academic_org_code: String,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct SchoolCollege {
-<<<<<<< HEAD
-        pub(crate) academicOrgCode: String,
-        pub(crate) academicGroupCode: String,
-        pub(crate) shortDescription: String,
-        pub(crate) formalDescription: String,
-        pub(crate) uddsCode: Option<String>,
-        pub(crate) schoolCollegeURI: String,
-=======
         pub academic_org_code: String,
         pub academic_group_code: String,
         pub short_description: String,
@@ -271,19 +161,13 @@ pub mod schema {
         pub udds_code: Option<String>,
         #[serde(rename = "schoolCollegeURI")]
         pub school_college_uri: String,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Consent {
-<<<<<<< HEAD
-        pub(crate) code: String,
-        pub(crate) description: String,
-=======
         pub code: String,
         pub description: String,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
@@ -305,16 +189,6 @@ pub mod schema {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassMaterials {
-<<<<<<< HEAD
-        pub(crate) classUniqueId: ClassUniqueId,
-        pub(crate) materialsDefined: bool,
-        pub(crate) noMaterialsInstructorMessage: Option<String>,
-        pub(crate) sectionNotes: Option<String>,
-        pub(crate) lastUpdate: u64,
-        pub(crate) relatedUrls: Vec<String>,
-        pub(crate) textbooks: Vec<String>,
-        pub(crate) otherMaterials: Vec<String>, // TODO are these really Vec<String> types?
-=======
         pub class_unique_id: ClassUniqueId,
         pub materials_defined: bool,
         pub no_materials_instructor_message: Option<String>,
@@ -323,21 +197,11 @@ pub mod schema {
         pub related_urls: Vec<String>,
         pub textbooks: Vec<String>, // TODO make Textbook struct to represent textbooks and resolve failing test
         pub other_materials: Vec<String>, // TODO are these really Vec<String> types?
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PersonAttributes {
-<<<<<<< HEAD
-        pub(crate) emplid: String,
-        pub(crate) pvi: String,
-        pub(crate) name: InstructorName,
-        pub(crate) email: String,
-        pub(crate) netid: String,
-        pub(crate) campusid: Option<String>,
-        pub(crate) office365PrimaryEmail: Option<String>,
-=======
         pub emplid: String,
         pub pvi: String,
         pub name: InstructorName,
@@ -346,7 +210,6 @@ pub mod schema {
         pub campusid: Option<String>,
         #[serde(rename = "office365PrimaryEmail")]
         pub office365_primary_email: Option<String>,
->>>>>>> main
     }
 
     #[derive(Debug, Deserialize)]
