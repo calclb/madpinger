@@ -10,12 +10,12 @@ use reqwest::get;
 use reqwest::Error as ReqwestError;
 
 
-const SECTION_GET_URI_BASE: &str =
+pub const SECTION_GET_URI_BASE: &str =
     "https://public.enroll.wisc.edu/api/search/v1/enrollmentPackages";
 
 /// Retrieves the sections of a course that can be identified with the params.
 /// As per [`reqwest`](reqwest)'s docs, note that this **should not be used repeatedly**, as it doesn't maintain a [`Client`](reqwest::Client);
-/// instead, it uses reqwest's convenience method [`get()`](reqwest::get).
+/// instead, it uses reqwest's convenience method [`get()`](get).
 pub async fn get_section_info(
     term_code: &str,
     subject_code: &str,
@@ -34,253 +34,232 @@ pub mod schema {
     use serde::Deserialize;
     use std::fmt::{Display, Formatter};
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct CourseSection {
-        pub(crate) id: String,
-        pub(crate) termCode: String,
-        pub(crate) subjectCode: String,
-        pub(crate) catalogNumber: String,
-        pub(crate) enrollmentClassNumber: usize,
-        pub(crate) packageEnrollmentStatus: PackageEnrollmentStatus,
-        pub(crate) creditRange: String,
-        // classMeetings: Vec<ClassMeeting>,
-        // nestedClassMeetings: Vec<ClassMeeting>,
-        pub(crate) instructorProvidedClassDetails: Option<String>,
-        pub(crate) published: bool,
-        pub(crate) classPermissionNumberEnabled: bool,
-        // sections: Vec<Subsection>,
-        pub(crate) enrollmentOptions: EnrollmentOptions,
-        pub(crate) lastUpdated: u64,
-        pub(crate) enrollmentStatus: EnrollmentStatus,
-        pub(crate) meetingMap: MeetingMap,
-        pub(crate) onlineOnly: bool,
-        pub(crate) enrollmentRequirementGroups: CatalogRequirementGroups,
-        pub(crate) isAsynchronous: bool,
-        pub(crate) modesOfInstruction: Vec<String>,
-        pub(crate) docId: String,
+        pub id: String,
+        pub term_code: String,
+        pub subject_code: String,
+        pub catalog_number: String,
+        pub enrollment_class_number: usize,
+        pub package_enrollment_status: PackageEnrollmentStatus,
+        pub credit_range: String,
+        pub class_meetings: Vec<ClassMeeting>,
+        pub instructor_provided_class_details: Option<String>,
+        pub published: bool,
+        pub class_permission_number_enabled: bool,
+        pub sections: Vec<Section>,
+        pub enrollment_options: EnrollmentOptions,
+        pub last_updated: u64,
+        pub enrollment_status: EnrollmentStatus,
+        pub meeting_map: MeetingMap,
+        pub online_only: bool,
+        pub enrollment_requirement_groups: Option<CatalogRequirementGroups>,
+        pub is_asynchronous: bool,
+        pub modes_of_instruction: Vec<String>,
+        pub doc_id: String,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PackageEnrollmentStatus {
-        pub(crate) availableSeats: Option<usize>,
-        pub(crate) waitlistTotal: usize,
-        pub(crate) status: Status, // String
+        pub available_seats: Option<usize>,
+        pub waitlist_total: usize,
+        pub status: Status,
     }
-
-    #[allow(non_snake_case)]
+    
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassMeeting {
-        pub(crate) meetingOrExamNumber: String,
-        pub(crate) meetingType: String,
-        pub(crate) meetingTimeStart: u64,
-        pub(crate) meetingTimeEnd: u64,
-        pub(crate) meetingDays: Option<String>,
-        pub(crate) meetingDaysList: Vec<String>,
-        pub(crate) building: Option<Building>,
-        pub(crate) room: Option<String>,
-        pub(crate) examDate: Option<String>, // TODO contained type in Option<..> may be incorrect
-        pub(crate) monday: bool,
-        pub(crate) tuesday: bool,
-        pub(crate) wednesday: bool,
-        pub(crate) thursday: bool,
-        pub(crate) friday: bool,
-        pub(crate) saturday: bool,
-        pub(crate) sunday: bool,
-        pub(crate) startDate: u64,
-        pub(crate) endDate: u64,
+        pub meeting_or_exam_number: String,
+        pub meeting_type: MeetingType,
+        pub meeting_time_start: u64,
+        pub meeting_time_end: u64,
+        pub meeting_days: Option<String>,
+        pub meeting_days_list: Vec<String>,
+        pub building: Option<Building>,
+        pub room: Option<String>,
+        pub exam_date: Option<u64>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
+    // TODO consider refactoring as enum (oncampus, offcampus: for off campus locations) to eliminate options
     pub struct Building {
-        pub(crate) buildingCode: String,
-        pub(crate) buildingName: String,
-        pub(crate) streetAddress: String,
-        pub(crate) latitude: f64,
-        pub(crate) longitude: f64,
-        pub(crate) location: (f64, f64), // represented by [0, 1], aka [Longitude, Latitude]
+        pub building_code: String,
+        pub building_name: String,
+        pub street_address: Option<String>,
+        pub latitude: Option<f64>,
+        pub longitude: Option<f64>,
+        pub location: Option<Vec<f64>>, // (f64, f64)
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Subsection {
-        pub(crate) classUniqueId: ClassUniqueId,
-        pub(crate) published: bool,
-        pub(crate) startDate: u64,
-        pub(crate) endDate: u64,
-        pub(crate) active: bool,
-        pub(crate) sessionCode: String,
-        pub(crate) subject: Subject,
-        pub(crate) catalogNumber: String,
-        pub(crate) courseId: String,
+    pub struct Section {
+        pub class_unique_id: ClassUniqueId,
+        pub published: bool,
+        // pub topic: Option<?>
+        pub start_date: u64,
+        pub end_date: u64,
+        pub active: bool,
+        pub session_code: String, // e,g, "A1"
+        pub subject: Subject,
+        pub catalog_number: String,
+        pub course_id: String,
         #[serde(rename = "type")]
-        pub(crate) course_type: String,
-        pub(crate) sectionNumber: String,
+        pub assembly_type: AssemblyType, // LAB, LEC, DIS
+        pub section_number: String,
         // honors: Option<_>, // TODO what type?
-        pub(crate) comB: bool,
-        pub(crate) gradedComponent: bool,
-        pub(crate) instructionMode: String,
-        pub(crate) addConsent: Consent,
-        pub(crate) dropConsent: Consent,
-        pub(crate) crossListing: Option<String>, // TODO what type?; check with CS/ECE 252 like courses
-        pub(crate) classMeetings: Vec<ClassMeeting>,
+        pub com_b: bool,
+        pub graded_component: bool,
+        pub instruction_mode: String,
+        pub add_consent: Consent,
+        pub drop_consent: Consent,
+        pub cross_listing: Option<String>,
+        pub class_meetings: Vec<ClassMeeting>,
         // classAttributes: Vec<_>, // TODO what type?
-        pub(crate) enrollmentStatus: EnrollmentStatus,
-        pub(crate) footnotes: Vec<String>,
-        pub(crate) classMaterials: Vec<ClassMaterials>,
-        pub(crate) instructors: Vec<Instructor>,
-        pub(crate) instructor: PersonAttributes, // basically a wrapper type of Instructor
+        pub enrollment_status: EnrollmentStatus,
+        pub footnotes: Vec<String>,
+        pub class_materials: Vec<ClassMaterials>,
+        pub instructors: Vec<PersonAttributes>,
+        pub instructor: Option<Instructor>, // basically a wrapper type of PersonAttributes
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassUniqueId {
-        pub(crate) termCode: String,
-        pub(crate) classNumber: usize,
+        pub term_code: String,
+        pub class_number: usize,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Subject {
-        pub(crate) termCode: String,
-        pub(crate) subjectCode: String,
-        pub(crate) description: String,
-        pub(crate) shortDescription: String,
-        pub(crate) formalDescription: String,
-        pub(crate) undergraduateCatalogURI: String,
-        pub(crate) graduateCatalogURI: String,
-        pub(crate) departmentURI: String,
-        pub(crate) uddsFundingSource: String,
-        pub(crate) schoolCollege: SchoolCollege,
-        pub(crate) footnotes: String,
-        pub(crate) departmentOwnerAcademicOrgCode: String,
+        pub term_code: String,
+        pub subject_code: String,
+        pub description: String,
+        pub short_description: String,
+        pub formal_description: String,
+        #[serde(rename = "undergraduateCatalogURI")]
+        pub undergraduate_catalog_uri: String,
+        #[serde(rename = "departmentURI")]
+        pub department_uri: String,
+        pub udds_funding_source: String,
+        pub school_college: SchoolCollege,
+        pub footnotes: Vec<String>,
+        pub department_owner_academic_org_code: String,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct SchoolCollege {
-        pub(crate) academicOrgCode: String, // TODO char type?
-        pub(crate) academicGroupCode: String,
-        pub(crate) shortDescription: String,
-        pub(crate) formalDescription: String,
-        pub(crate) uddsCode: Option<String>,
-        pub(crate) schoolCollegeURI: String,
+        pub academic_org_code: String,
+        pub academic_group_code: String,
+        pub short_description: String,
+        pub formal_description: String,
+        pub udds_code: Option<String>,
+        #[serde(rename = "schoolCollegeURI")]
+        pub school_college_uri: String,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Consent {
-        pub(crate) code: String, // TODO char type?
-        pub(crate) description: String,
+        pub code: String,
+        pub description: String,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct EnrollmentStatus {
-        pub(crate) classUniqueId: ClassUniqueId,
-        pub(crate) capacity: usize,
-        pub(crate) currentlyEnrolled: usize,
-        pub(crate) waitlistCapacity: usize,
-        pub(crate) waitlistCurrentSize: usize,
-        pub(crate) openSeats: usize,
-        pub(crate) openWaitlistSpots: usize,
-        pub(crate) aggregateCapacity: Option<usize>,
-        pub(crate) aggregateCurrencyEnrolled: Option<usize>,
-        pub(crate) aggregateWaitlistCapacity: Option<usize>,
-        pub(crate) aggregateWaitlistCurrentSize: Option<usize>,
+        pub class_unique_id: ClassUniqueId,
+        pub capacity: usize,
+        pub currently_enrolled: usize,
+        pub waitlist_capacity: usize,
+        pub waitlist_current_size: usize,
+        pub open_seats: usize,
+        pub open_waitlist_spots: usize,
+        pub aggregate_capacity: Option<usize>,
+        pub aggregate_currency_enrolled: Option<usize>,
+        pub aggregate_waitlist_capacity: Option<usize>,
+        pub aggregate_waitlist_current_size: Option<usize>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassMaterials {
-        pub(crate) classUniqueId: ClassUniqueId,
-        pub(crate) materialsDefined: bool,
-        pub(crate) noMaterialsInstructorMessage: String,
-        pub(crate) sectionNotes: Option<String>,
-        pub(crate) lastUpdate: u64,
-        pub(crate) relatedUrls: Vec<String>,
-        pub(crate) textbooks: Vec<String>,
-        pub(crate) otherMaterials: Vec<String>, // TODO are these really Vec<String> types?
+        pub class_unique_id: ClassUniqueId,
+        pub materials_defined: bool,
+        pub no_materials_instructor_message: Option<String>,
+        pub section_notes: Option<String>,
+        pub last_update: u64,
+        pub related_urls: Vec<String>,
+        pub textbooks: Vec<String>, // TODO make Textbook struct to represent textbooks and resolve failing test
+        pub other_materials: Vec<String>, // TODO are these really Vec<String> types?
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Instructor {
-        pub(crate) emplid: String,
-        pub(crate) pvi: String,
-        pub(crate) name: InstructorName,
-        pub(crate) email: String,
-        pub(crate) netid: String,
-        pub(crate) campusid: Option<String>,
-        pub(crate) office365PrimaryEmail: Option<String>,
+    pub struct PersonAttributes {
+        pub emplid: String,
+        pub pvi: String,
+        pub name: InstructorName,
+        pub email: String,
+        pub netid: String,
+        pub campusid: Option<String>,
+        #[serde(rename = "office365PrimaryEmail")]
+        pub office365_primary_email: Option<String>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct InstructorName {
-        pub(crate) first: String,
-        pub(crate) middle: Option<String>,
-        pub(crate) last: String,
-        pub(crate) legalFirst: Option<String>,
-        pub(crate) legalMiddle: Option<String>,
+        pub first: String,
+        pub middle: Option<String>,
+        pub last: String,
+        pub legal_first: Option<String>,
+        pub legal_middle: Option<String>,
     }
 
-    #[allow(non_camel_case_types)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct PersonAttributes(Instructor);
+    pub struct Instructor {
+        person_attributes: PersonAttributes,
+    }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct EnrollmentOptions {
-        pub(crate) classPermissionNumberNeeded: bool,
+        pub class_permission_number_needed: bool,
         // relatedClasses: Vec<Class>, // TODO what type is this?
-        pub(crate) waitlist: bool,
-        pub(crate) relatedClassNumber: bool,
+        pub waitlist: bool,
+        pub related_class_number: bool,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct MeetingMap {
-        pub(crate) monday: bool,
-        pub(crate) tuesday: bool,
-        pub(crate) wednesday: bool,
-        pub(crate) thursday: bool,
-        pub(crate) friday: bool,
-        pub(crate) saturday: bool,
-        pub(crate) sunday: bool,
+        pub monday: bool,
+        pub tuesday: bool,
+        pub wednesday: bool,
+        pub thursday: bool,
+        pub friday: bool,
+        pub saturday: bool,
+        pub sunday: bool,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct CatalogRequirementGroups {
-        pub(crate) catalogRequirementGroups: Vec<CatalogRequirement>,
+        pub catalog_requirement_groups: Vec<CatalogRequirement>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct CatalogRequirement {
-        pub(crate) code: String,
-        pub(crate) description: String,
+        pub code: String,
+        pub description: String,
         // classAssociationRequirementGroups: Vec<String>, TODO type?
     }
 
@@ -291,7 +270,7 @@ pub mod schema {
         Waitlisted,
         Closed,
     }
-
+    
     impl Display for Status {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             write!(
@@ -301,6 +280,48 @@ pub mod schema {
                     Self::Open => "OPEN",
                     Self::Waitlisted => "WAITLISTED",
                     Self::Closed => "CLOSED",
+                }
+            )
+        }
+    }
+
+    #[derive(Debug, Deserialize)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    pub enum MeetingType {
+        Class,
+        Exam,
+    }
+    
+    impl Display for MeetingType {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            write!(
+                f,
+                "{}",
+                match *self {
+                    Self::Class => "CLASS",
+                    Self::Exam => "EXAM",
+                }
+            )
+        }
+    }
+    
+    #[derive(Debug, Deserialize)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    pub enum AssemblyType {
+        Lec,
+        Dis,
+        Lab,
+    }
+
+    impl Display for AssemblyType {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            write!(
+                f,
+                "{}",
+                match *self {
+                    Self::Lec => "LEC",
+                    Self::Dis => "DIS",
+                    Self::Lab => "LAB",
                 }
             )
         }

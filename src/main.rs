@@ -1,14 +1,9 @@
-use crate::section::get_section_info;
-use crate::section::schema::{
-    EnrollmentStatus,
-    PackageEnrollmentStatus,
-};
+use madpinger::section::get_section_info;
+use madpinger::print_out_sections;
 use std::error::Error;
-mod section;
 
 mod config {
     use clap::{command, Parser};
-    use std::fmt::{Display, Formatter};
 
     #[derive(Parser, Debug)]
     #[command(author, version, about, long_about = None)]
@@ -28,30 +23,6 @@ mod config {
         #[clap(value_parser, short, long)]
         size: Option<usize>,
     }
-
-    #[derive(Debug)]
-    pub struct Filters {
-        pub(crate) open: bool,
-        pub(crate) waitlisted: bool,
-        pub(crate) closed: bool,
-    }
-
-    impl Display for Filters {
-        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-            let mut s: String = String::new();
-            if self.open {
-                s.push_str("OPEN");
-            }
-            if self.waitlisted {
-                s.push_str("WAITLISTED");
-            }
-            if self.closed {
-                s.push_str("CLOSED")
-            }
-
-            write!(f, "{}", s.trim())
-        }
-    }
 }
 
 
@@ -64,20 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("{:#?}", &course_sections);
 
     println!("listing important section information..");
-    for c in &course_sections {
-        let PackageEnrollmentStatus { status, .. } = &c.packageEnrollmentStatus;
-        let EnrollmentStatus {
-            currentlyEnrolled,
-            capacity,
-            waitlistCapacity,
-            waitlistCurrentSize,
-            ..
-        } = &c.enrollmentStatus;
-        println!(
-            "section #{}:\t{}\t\t({}/{} seats, {}/{} waitlisted)",
-            c.id, status, currentlyEnrolled, capacity, waitlistCurrentSize, waitlistCapacity
-        );
-    }
+    print_out_sections(&course_sections);
 
     println!("done!");
     Ok(())
