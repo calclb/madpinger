@@ -1,5 +1,5 @@
-use std::error::Error;
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Duration;
@@ -18,18 +18,25 @@ const BATCH_REQUEST_SIZE: usize = 20;
 async fn no_errors_exhaustive() -> Result<(), Box<dyn Error>> {
     let f = File::open("./course_sections.txt").expect("could not find `course_section.txt`");
     let br = BufReader::new(f);
-    
-    for (i, l) in br.lines().skip(1).enumerate() { // ignore header line
+
+    for (i, l) in br.lines().skip(1).enumerate() {
+        // ignore header line
         if let Ok(line) = l {
             let v: Vec<&str> = line.splitn(3, "/").collect();
-            println!("hit {}: {}/{}", i+1, SECTION_GET_URI_BASE, line.to_string());
+            println!(
+                "hit {}: {}/{}",
+                i + 1,
+                SECTION_GET_URI_BASE,
+                line.to_string()
+            );
             let _ = get_section_info(v[0], v[1], v[2]).await?;
         }
-        
-        if i != 0 && i % BATCH_REQUEST_SIZE == 0 { // avoid rate-limiting (or ip blacklist)
+
+        if i != 0 && i % BATCH_REQUEST_SIZE == 0 {
+            // avoid rate-limiting (or ip blacklist)
             sleep(BATCH_PAUSE).await;
         }
     }
-    
+
     Ok(())
 }
