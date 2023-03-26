@@ -9,7 +9,6 @@ use crate::section::schema::{
 use reqwest::get;
 use reqwest::Error as ReqwestError;
 
-
 pub const SECTION_GET_URI_BASE: &str =
     "https://public.enroll.wisc.edu/api/search/v1/enrollmentPackages";
 
@@ -67,7 +66,7 @@ pub mod schema {
         pub waitlist_total: usize,
         pub status: Status,
     }
-    
+
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClassMeeting {
@@ -270,7 +269,7 @@ pub mod schema {
         Waitlisted,
         Closed,
     }
-    
+
     impl Display for Status {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             write!(
@@ -291,7 +290,7 @@ pub mod schema {
         Class,
         Exam,
     }
-    
+
     impl Display for MeetingType {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             write!(
@@ -304,7 +303,7 @@ pub mod schema {
             )
         }
     }
-    
+
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     pub enum AssemblyType {
