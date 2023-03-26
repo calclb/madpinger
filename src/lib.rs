@@ -2,6 +2,7 @@
 use crate::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
 
 pub mod section;
+pub mod search;
 
 pub fn print_out_sections(course_sections: &Vec<CourseSection>) {
     for c in course_sections {
@@ -18,4 +19,10 @@ pub fn print_out_sections(course_sections: &Vec<CourseSection>) {
             c.id, status, currently_enrolled, capacity, waitlist_current_size, waitlist_capacity
         );
     }
+}
+
+pub struct CourseStatusFilters {
+    pub open: bool,
+    pub waitlisted: bool,
+    pub closed: bool,
 }
