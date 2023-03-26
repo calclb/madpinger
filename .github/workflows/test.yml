@@ -1,8 +1,12 @@
 on:
   push:
       branches:
-        - main
+        - $default_branch
+      paths:
+        - '**.rs'
   pull_request:
+    paths:
+      - '**.rs'
 
 name: Test
 
