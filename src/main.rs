@@ -33,7 +33,7 @@ mod config {
             #[clap(value_parser)]
             course_id: String,
 
-            #[clap(value_parser, long)]
+            #[clap(short, long)]
             term_code: Option<String>,
         },
         Search {
