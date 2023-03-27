@@ -1,13 +1,16 @@
-use crate::config::{Action, Args};
-use clap::Parser;
-use madpinger::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
-use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 use std::error::Error;
 use std::time::Duration;
-use reqwest::Client;
+
+use clap::Parser;
 use reqwest::header::{HeaderMap, HeaderValue, HOST, USER_AGENT};
-use madpinger::{CourseStatusFilters, search};
+use reqwest::Client;
+
+use madpinger::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
+use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
+use madpinger::{search, CourseStatusFilters};
 use search::get_search_info;
+
+use crate::config::{Action, Args};
 
 mod section;
 
@@ -42,7 +45,7 @@ mod config {
 
             #[clap(value_parser, short, long)]
             size: Option<usize>,
-    
+
             #[clap(short, long)]
             term_code: Option<String>,
 
@@ -61,22 +64,27 @@ mod config {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let Args { action, .. } = Args::parse();
-    
+
     let mut default_headers = HeaderMap::new();
     default_headers.insert(HOST, HeaderValue::from_static("public.enroll.wisc.edu"));
-    default_headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0"));
-    
+    default_headers.insert(
+        USER_AGENT,
+        HeaderValue::from_static(
+            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
+        ),
+    );
+
     let client = Client::builder()
         .default_headers(default_headers)
         .cookie_store(true)
         .connect_timeout(Duration::from_secs(10))
         .timeout(Duration::from_secs(10))
         .build()?;
-    
+
     if let Action::Section {
         subject_code, // e.g. "266"
-        course_id, // e.g. "024798"
-        term_code, // e.g. "1234" or "1424"
+        course_id,    // e.g. "024798"
+        term_code,    // e.g. "1234" or "1424"
         ..
     } = action
     {
@@ -138,14 +146,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         open,
         waitlisted,
         closed,
-    } = action {
-        
+    } = action
+    {
         let status_filters = CourseStatusFilters {
             open,
             waitlisted,
             closed,
         };
-        
+
         let term_code = term_code.unwrap_or(DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
         let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
         println!("Searching for '{search_key}'...");

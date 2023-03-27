@@ -1,9 +1,11 @@
-use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Duration;
+
 use tokio::time::sleep;
+
+use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 
 const BATCH_PAUSE: Duration = Duration::from_secs(5);
 const BATCH_REQUEST_SIZE: usize = 20;

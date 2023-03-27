@@ -2,12 +2,13 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+use reqwest::get;
+use reqwest::Error as ReqwestError;
+
 use crate::section::schema::{
     CatalogRequirementGroups, CourseSection, EnrollmentOptions, EnrollmentStatus, MeetingMap,
     PackageEnrollmentStatus, Status,
 };
-use reqwest::get;
-use reqwest::Error as ReqwestError;
 
 pub const SECTION_GET_URI_BASE: &str =
     "https://public.enroll.wisc.edu/api/search/v1/enrollmentPackages";
@@ -30,8 +31,9 @@ pub async fn get_section_info(
 }
 
 pub mod schema {
-    use serde::Deserialize;
     use std::fmt::{Display, Formatter};
+
+    use serde::Deserialize;
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]

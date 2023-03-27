@@ -1,8 +1,8 @@
 //! A program that polls the UW-Madison course search and enroll site (https://public.enroll.wisc.edu)
 use crate::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
 
-pub mod section;
 pub mod search;
+pub mod section;
 
 pub fn print_out_sections(course_sections: &Vec<CourseSection>) {
     for c in course_sections {

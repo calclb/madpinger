@@ -8,14 +8,16 @@ description = "Program that pings the course search and enroll API"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "~0.11", features = ["json", "cookies"] }
-clap = { version = "4.1.13", features = ["derive"] }
-serde_json = "~1.0"
-tokio = { version = "1.26.0", features = [ "rt-multi-thread", "macros" ] }
-serde = { version = "~1.0", features = [ "derive" ]}
+reqwest = { version = "^0.11", features = ["json", "cookies"] }
+clap = { version = "^4", features = ["derive"] }
+serde_json = "^1"
+tokio = { version = "^1.26", features = ["rt-multi-thread", "macros"] }
+serde = { version = "^1", features = ["derive"] }
 
 [profile.release]
 strip = true # automatically strip symbols from the binary
-opt-level = "z" # optimize for binary size
 lto = true # "Link-time optimizations"
-codegen-units = 1 # by default, Cargo specifies 16 parallel codegen units for release builds. This improves compile times, but prevents some optimizations. Set to 1 to allow for maximum size reduction optimizations
+
+[profile.tiny]
+inherits = "release"
+opt-level = "z" # optimize for binary size
