@@ -1,13 +1,15 @@
 use std::error::Error;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 use std::time::Duration;
 
 use clap::Parser;
 use reqwest::header::{HeaderMap, HeaderValue, HOST, USER_AGENT};
 use reqwest::Client;
 
-use madpinger::section::schema::{CourseSection, EnrollmentStatus, PackageEnrollmentStatus};
+use madpinger::search::schema::SearchedCourse;
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
-use madpinger::{search, CourseStatusFilters};
+use madpinger::{report_course_sections, search, CourseStatusFilters};
 use search::get_search_info;
 
 use crate::config::{Action, Args};
@@ -27,7 +29,7 @@ mod config {
         pub(crate) action: Action,
     }
 
-    #[derive(Debug, Subcommand, PartialEq)]
+    #[derive(Debug, Subcommand, PartialEq, Eq)]
     pub enum Action {
         Section {
             #[clap(value_parser)]
@@ -57,6 +59,16 @@ mod config {
 
             #[clap(short, long)]
             closed: bool,
+        },
+        Listing {
+            #[clap(value_parser)]
+            start_line: usize,
+
+            #[clap(value_parser)]
+            end_line: Option<usize>,
+
+            #[clap(short, long)]
+            print: bool,
         },
     }
 }
@@ -88,57 +100,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ..
     } = action
     {
-        let term_code = term_code.unwrap_or(DEFAULT_PAGE_SIZE.to_string()); // default spring '23 term code
+        let term_code = term_code.unwrap_or_else(|| DEFAULT_PAGE_SIZE.to_string()); // default spring '23 term code
 
         let url = format!(
             "{}/{}/{}/{}",
             SECTION_GET_URI_BASE, &term_code, &subject_code, &course_id
         );
         println!("reading/deserializing json response at {url}..");
-        let course_sections = get_section_info(&term_code, &subject_code, &course_id).await?;
-
-        // println!("omitted some information; here's the deserialized representation:");
-        // println!("{:#?}", &course_sections);
+        let course_sections =
+            get_section_info(&client, &term_code, &subject_code, &course_id).await?;
 
         println!("listing important section information for course id {course_id}..");
-
-        if course_sections.is_empty() {
-            eprintln!("No sections found.")
-        }
-
-        for c in &course_sections {
-            let CourseSection { sections, .. } = &c;
-            let PackageEnrollmentStatus { status, .. } = &c.package_enrollment_status;
-            let EnrollmentStatus {
-                currently_enrolled,
-                capacity,
-                waitlist_capacity,
-                waitlist_current_size,
-                ..
-            } = &c.enrollment_status;
-
-            // ..some course formatting
-            let mut meet_detail_str = String::new();
-            for (i, sec) in sections.iter().enumerate() {
-                meet_detail_str
-                    .push_str(format!("{} {}", sec.assembly_type, sec.section_number).as_str());
-                if i != sections.len() - 1 {
-                    // if not the last element, separate with comma
-                    meet_detail_str.push_str(", ");
-                }
-            }
-
-            // now print out the course detail
-            println!(
-                "  {}:  {}  ({}/{} seats, {}/{} waitlisted)",
-                meet_detail_str,
-                status,
-                currently_enrolled,
-                capacity,
-                waitlist_current_size,
-                waitlist_capacity
-            );
-        }
+        report_course_sections(&course_sections);
     } else if let Action::Search {
         search_key,
         size,
@@ -154,10 +127,76 @@ async fn main() -> Result<(), Box<dyn Error>> {
             closed,
         };
 
-        let term_code = term_code.unwrap_or(DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
+        let term_code = term_code.unwrap_or_else(|| DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
         let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
         println!("Searching for '{search_key}'...");
-        get_search_info(client, &term_code, &search_key, size, status_filters).await?;
+        let api_ping =
+            get_search_info(client, &term_code, &search_key, size, status_filters).await?;
+
+        let num_hits = &api_ping.found;
+        let hits = api_ping.hits;
+
+        println!("found {} hits", num_hits);
+        let mut f: File = File::create("search_results.csv")?;
+        f.write_all(b"term_code,subject_code,course_id\n")?;
+        for sc in &hits {
+            let SearchedCourse {
+                // catalog_number,
+                // description,
+                course_designation,
+                course_id,
+                title,
+                subject,
+                ..
+            } = sc;
+
+            println!(
+                "#{:<10} - {:<15} - {}",
+                course_id, course_designation, title
+            );
+            f.write_all(
+                format!(
+                    "{},{},{}\n",
+                    subject.term_code, subject.subject_code, course_id
+                )
+                .as_bytes(),
+            )?;
+        }
+    } else if let Action::Listing {
+        start_line,
+        end_line,
+        print,
+    } = action
+    {
+        let f: File =
+            File::open("course_sections.csv").expect("could not open `course_sections.csv`");
+        let br = BufReader::new(f);
+
+        let end_line = end_line.unwrap_or(usize::MAX);
+
+        for (i, l) in br.lines().skip(start_line).enumerate().skip(1) {
+            if i >= end_line {
+                break;
+            }
+
+            if let Ok(line) = l {
+                let v: Vec<&str> = line.splitn(3, ',').collect();
+                let tc = v[0];
+                let sc = v[1];
+                let cid = v[2];
+
+                let url = format!("{}/{}/{}/{}", SECTION_GET_URI_BASE, tc, sc, cid);
+                println!("reading/deserializing json response at {url}..");
+                let course_sections = get_section_info(&client, tc, sc, cid).await?;
+
+                if print {
+                    report_course_sections(&course_sections);
+                    println!();
+                }
+            } else {
+                println!("(skipped line {}; was malformed)", i);
+            }
+        }
     }
     Ok(())
 }
