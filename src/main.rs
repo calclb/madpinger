@@ -29,7 +29,7 @@ mod config {
         pub(crate) action: Action,
     }
 
-    #[derive(Debug, Subcommand, PartialEq)]
+    #[derive(Debug, Subcommand, PartialEq, Eq)]
     pub enum Action {
         Section {
             #[clap(value_parser)]
