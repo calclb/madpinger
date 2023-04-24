@@ -23,7 +23,7 @@ const SKIP_LINES: usize = 5000; // don't want the test to go through the entire 
 async fn no_deser_errors_exhaustive() -> Result<(), Box<dyn Error>> {
     let f = File::open(API_SRC_FILE)
         .expect("couldn't open the API file to load necessary request info");
-    let br = BufReader::new(f);
+    let br: BufReader<File> = BufReader::new(f);
     let client = Client::builder()
         .default_headers(default_client_headers())
         .cookie_store(true)
@@ -61,3 +61,4 @@ async fn no_deser_errors_exhaustive() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+

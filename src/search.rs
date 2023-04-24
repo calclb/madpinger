@@ -135,7 +135,7 @@ pub mod schema {
         pub credit_range: String,
         pub first_taught: Option<String>,
         pub last_taught: Option<String>,
-        pub typically_offered: String,
+        pub typically_offered: String, // TODO useful information
         pub general_ed: Option<ReqGoalAbbrev>,
         pub ethnic_studies: Option<ReqGoalAbbrev>,
         pub breadths: Vec<ReqGoalAbbrev>,

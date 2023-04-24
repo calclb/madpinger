@@ -9,15 +9,13 @@ use reqwest::Client;
 
 use madpinger::search::schema::SearchedCourse;
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
-use madpinger::{report_course_sections, search, CourseStatusFilters};
+use madpinger::{report_course_sections, search, CourseStatusFilters, DEFAULT_PAGE_SIZE, DEFAULT_TERM_CODE, DEFAULT_LISTING_SIZE};
 use search::get_search_info;
 
 use crate::config::{Action, Args};
 
 mod section;
 
-const DEFAULT_PAGE_SIZE: usize = 10;
-const DEFAULT_TERM_CODE: &str = "1234"; // spring '23
 
 mod config {
     use clap::{command, Parser, Subcommand};
@@ -61,11 +59,11 @@ mod config {
             closed: bool,
         },
         Listing {
-            #[clap(value_parser)]
-            start_line: usize,
+            #[clap(value_parser, short, long)]
+            line_start: Option<usize>,
 
-            #[clap(value_parser)]
-            end_line: Option<usize>,
+            #[clap(value_parser, short, long)]
+            size: Option<usize>,
 
             #[clap(short, long)]
             print: bool,
@@ -100,7 +98,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ..
     } = action
     {
-        let term_code = term_code.unwrap_or_else(|| DEFAULT_PAGE_SIZE.to_string()); // default spring '23 term code
+        let term_code = term_code.unwrap_or_else(|| DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
 
         let url = format!(
             "{}/{}/{}/{}",
@@ -141,8 +139,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         f.write_all(b"term_code,subject_code,course_id\n")?;
         for sc in &hits {
             let SearchedCourse {
-                // catalog_number,
-                // description,
                 course_designation,
                 course_id,
                 title,
@@ -151,8 +147,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             } = sc;
 
             println!(
-                "#{:<10} - {:<15} - {}",
-                course_id, course_designation, title
+                "cid: {:<10} sc: {:<3} - {:<15} - {}",
+                course_id, subject.subject_code, course_designation, title
             );
             f.write_all(
                 format!(
@@ -163,8 +159,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             )?;
         }
     } else if let Action::Listing {
-        start_line,
-        end_line,
+        line_start,
+        size,
         print,
     } = action
     {
@@ -172,10 +168,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             File::open("course_sections.csv").expect("could not open `course_sections.csv`");
         let br = BufReader::new(f);
 
-        let end_line = end_line.unwrap_or(usize::MAX);
+        let line_start = line_start.unwrap_or(0);
+        let size = size.unwrap_or(DEFAULT_LISTING_SIZE);
 
-        for (i, l) in br.lines().skip(start_line).enumerate().skip(1) {
-            if i >= end_line {
+        for (i, l) in br.lines().skip(line_start).enumerate().skip(1) {
+            if i > size {
                 break;
             }
 
@@ -186,7 +183,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let cid = v[2];
 
                 let url = format!("{}/{}/{}/{}", SECTION_GET_URI_BASE, tc, sc, cid);
-                println!("reading/deserializing json response at {url}..");
+                println!("{i}: reading/deserializing json response at {url}..");
                 let course_sections = get_section_info(&client, tc, sc, cid).await?;
 
                 if print {

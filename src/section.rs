@@ -215,7 +215,7 @@ pub mod schema {
         pub open_seats: usize,
         pub open_waitlist_spots: usize,
         pub aggregate_capacity: Option<usize>,
-        pub aggregate_currency_enrolled: Option<usize>,
+        pub aggregate_currently_enrolled: Option<usize>,
         pub aggregate_waitlist_capacity: Option<usize>,
         pub aggregate_waitlist_current_size: Option<usize>,
     }
