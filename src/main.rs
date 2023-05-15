@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let hits = api_ping.hits;
 
         println!("found {} hits", num_hits);
-        let mut f: File = File::create("search_results.csv")?;
+        let mut f: File = File::create("logs/search_results.csv")?;
         f.write_all(b"term_code,subject_code,course_id,course_designation,title\n")?;
         for sc in &hits {
             let SearchedCourse {
