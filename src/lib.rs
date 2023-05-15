@@ -61,8 +61,8 @@ pub fn report_course_sections(course_sections: &Vec<CourseSection>) {
 
         if let Some(EnrollmentStatus {
             currently_enrolled: fb_enrolled, // fallback
-            capacity: fb_cap, // fallback
-            waitlist_capacity: fb_wcap, // fallback
+            capacity: fb_cap,                // fallback
+            waitlist_capacity: fb_wcap,      // fallback
             waitlist_current_size: fb_wsize, // fallback
             aggregate_currently_enrolled: agg_enrolled,
             aggregate_capacity: agg_cap,
@@ -76,7 +76,7 @@ pub fn report_course_sections(course_sections: &Vec<CourseSection>) {
                 (None, None, None, None) => EnrollInfoType::Fallback,
                 _ => EnrollInfoType::Mix,
             };
-            
+
             // ..some course formatting
             let mut meet_detail_str = String::new();
             for (i, sec) in sections.iter().enumerate() {
@@ -90,12 +90,12 @@ pub fn report_course_sections(course_sections: &Vec<CourseSection>) {
 
             // println!("data: {:?}", &cs);
             // println!("sections {:?}", &sections);
-            
+
             let open_seats = match (agg_cap, agg_enrolled) {
                 (Some(cap), Some(enrolled)) => max(0, *cap as isize - *enrolled as isize) as usize,
                 _ => max(0, *fb_cap as isize - *fb_enrolled as isize) as usize,
             };
-            
+
             // now print out the course detail
             println!(
                 "{} - {}: {} ({} open seats, {}/{} enrolled, {}/{} waitlisted) [{}]",

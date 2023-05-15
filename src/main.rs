@@ -9,13 +9,15 @@ use reqwest::Client;
 
 use madpinger::search::schema::SearchedCourse;
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
-use madpinger::{report_course_sections, search, CourseStatusFilters, DEFAULT_PAGE_SIZE, DEFAULT_TERM_CODE, DEFAULT_LISTING_SIZE};
+use madpinger::{
+    report_course_sections, search, CourseStatusFilters, DEFAULT_LISTING_SIZE, DEFAULT_PAGE_SIZE,
+    DEFAULT_TERM_CODE,
+};
 use search::get_search_info;
 
 use crate::config::{Action, Args};
 
 mod section;
-
 
 mod config {
     use clap::{command, Parser, Subcommand};
@@ -127,7 +129,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let term_code = term_code.unwrap_or_else(|| DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
         let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
-        println!("Searching for '{search_key}'...");
+        println!("Searching for '{search_key}' in term {}...", &term_code);
         let api_ping =
             get_search_info(client, &term_code, &search_key, size, status_filters).await?;
 
@@ -136,7 +138,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         println!("found {} hits", num_hits);
         let mut f: File = File::create("search_results.csv")?;
-        f.write_all(b"term_code,subject_code,course_id\n")?;
+        f.write_all(b"term_code,subject_code,course_id,course_designation,title\n")?;
         for sc in &hits {
             let SearchedCourse {
                 course_designation,
@@ -152,8 +154,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             );
             f.write_all(
                 format!(
-                    "{},{},{}\n",
-                    subject.term_code, subject.subject_code, course_id
+                    "{},{},{},\"{}\",\"{}\"\n",
+                    subject.term_code, subject.subject_code, course_id, course_designation, title
                 )
                 .as_bytes(),
             )?;

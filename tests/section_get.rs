@@ -61,4 +61,3 @@ async fn no_deser_errors_exhaustive() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
