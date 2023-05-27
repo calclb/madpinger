@@ -25,8 +25,6 @@ pub const SECTION_GET_URI_BASE: &str =
     "https://public.enroll.wisc.edu/api/search/v1/enrollmentPackages";
 
 /// Retrieves the sections of a course that can be identified with the params.
-/// As per [`reqwest`](reqwest)'s docs, note that this **should not be used repeatedly**, as it doesn't maintain a [`Client`](reqwest::Client);
-/// instead, it uses reqwest's convenience method [`get()`](get).
 pub async fn get_section_info(
     client: &Client,
     term_code: &str,

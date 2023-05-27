@@ -22,6 +22,26 @@ pub struct CourseStatusFilters {
     pub closed: bool,
 }
 
+impl CourseStatusFilters {
+    pub fn new(open: bool, waitlisted: bool, closed: bool) -> Self {
+        Self {
+            open,
+            waitlisted,
+            closed,
+        }
+    }
+}
+
+impl Default for CourseStatusFilters {
+    fn default() -> Self {
+        Self {
+            open: true,
+            waitlisted: true,
+            closed: true,
+        }
+    }
+}
+
 /// Returns default client headers for pinging the CS&E API.
 pub fn default_client_headers() -> HeaderMap {
     let mut default_headers = HeaderMap::new();

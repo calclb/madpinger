@@ -5,13 +5,44 @@ use std::time::Duration;
 
 use madpinger::{default_client_headers, API_SRC_FILE};
 use reqwest::Client;
+use thiserror::Error;
 use tokio::time::sleep;
 
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 
 const BATCH_PAUSE: Duration = Duration::from_secs(10);
-const BATCH_REQUEST_SIZE: usize = 100;
-const SKIP_LINES: usize = 5000; // don't want the test to go through the entire API every commit
+const BATCH_REQUEST_SIZE: usize = 50;
+const SKIP_LINES: usize = 5060; // don't want the test to go through the entire API every commit
+const ESSENTIAL_CSV_COLS: usize = 5;
+
+struct EssentialCsvColumn<'a> {
+    tc: &'a str,
+    sc: &'a str,
+    cid: &'a str,
+}
+
+#[derive(Debug, Error)]
+pub enum CsvConversionError {
+    #[error("missing column(s) in CSV")]
+    MissingColumns,
+}
+
+impl<'a> TryFrom<Vec<&'a str>> for EssentialCsvColumn<'a> {
+    type Error = CsvConversionError;
+
+    fn try_from(v: Vec<&'a str>) -> Result<Self, Self::Error> {
+        if v.len() < ESSENTIAL_CSV_COLS { // avoid computation if there's missing cols
+            return Err(CsvConversionError::MissingColumns);
+        }
+        
+        if let [tc, sc, cid] = v[..] {
+            Ok(EssentialCsvColumn { tc, sc, cid })
+        } else {
+            Err(CsvConversionError::MissingColumns)
+        }
+        
+    }
+}
 
 /// Tests that the deserialization process does not throw an error when parsing the API responses from the UW-Madison CS&E site.
 /// If an error does occur, it's likely because the schema is still misconfigured.
@@ -34,10 +65,13 @@ async fn no_deser_errors_exhaustive() -> Result<(), Box<dyn Error>> {
     for (i, l) in br.lines().skip(1).enumerate().skip(SKIP_LINES) {
         // ignore header line
         if let Ok(line) = l {
-            let v: Vec<&str> = line.splitn(3, ',').collect();
-            let tc = v[0];
-            let sc = v[1];
-            let cid = v[2];
+            
+            let v: Vec<&str> = line.split(',').take(ESSENTIAL_CSV_COLS).collect(); // only the first couple of items are useful for us
+            let EssentialCsvColumn {
+                tc,
+                sc,
+                cid,
+            } = v.try_into()?;
 
             println!(
                 "hit {}: {}/{}/{}/{}",

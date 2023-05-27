@@ -120,6 +120,16 @@ pub mod schema {
         pub found: usize,
         pub hits: Vec<SearchedCourse>,
     }
+    
+    impl SearchApiPing {
+      pub fn found(&self) -> usize {
+        self.found
+      }
+      
+      pub fn hits(&self) -> &Vec<SearchedCourse> {
+        &self.hits
+      }
+    }
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]

@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::Write;
 use std::time::Duration;
 
 use clap::Parser;
@@ -10,7 +10,7 @@ use reqwest::Client;
 use madpinger::search::schema::SearchedCourse;
 use madpinger::section::{get_section_info, SECTION_GET_URI_BASE};
 use madpinger::{
-    report_course_sections, search, CourseStatusFilters, DEFAULT_LISTING_SIZE, DEFAULT_PAGE_SIZE,
+    report_course_sections, search, CourseStatusFilters, DEFAULT_PAGE_SIZE,
     DEFAULT_TERM_CODE,
 };
 use search::get_search_info;
@@ -121,11 +121,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         closed,
     } = action
     {
-        let status_filters = CourseStatusFilters {
-            open,
-            waitlisted,
-            closed,
+        // If no flags were passed and default to false, just invert to true; doesn't make sense to get no result
+        let (open, waitlisted, closed) = match (open, waitlisted, closed) {
+            (false, false, false) => (true, true, true),
+            _ => (open, waitlisted, closed),
         };
+
+        let status_filters = CourseStatusFilters::new(open, waitlisted, closed);
 
         let term_code = term_code.unwrap_or_else(|| DEFAULT_TERM_CODE.to_string()); // default spring '23 term code
         let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
@@ -137,7 +139,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let hits = api_ping.hits;
 
         println!("found {} hits", num_hits);
-        let mut f: File = File::create("logs/search_results.csv")?;
+        let mut f: File = File::create("out/search_results.csv")?;
         f.write_all(b"term_code,subject_code,course_id,course_designation,title\n")?;
         for sc in &hits {
             let SearchedCourse {
@@ -159,42 +161,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 )
                 .as_bytes(),
             )?;
-        }
-    } else if let Action::Listing {
-        line_start,
-        size,
-        print,
-    } = action
-    {
-        let f: File =
-            File::open("course_sections.csv").expect("could not open `course_sections.csv`");
-        let br = BufReader::new(f);
-
-        let line_start = line_start.unwrap_or(0);
-        let size = size.unwrap_or(DEFAULT_LISTING_SIZE);
-
-        for (i, l) in br.lines().skip(line_start).enumerate().skip(1) {
-            if i > size {
-                break;
-            }
-
-            if let Ok(line) = l {
-                let v: Vec<&str> = line.splitn(3, ',').collect();
-                let tc = v[0];
-                let sc = v[1];
-                let cid = v[2];
-
-                let url = format!("{}/{}/{}/{}", SECTION_GET_URI_BASE, tc, sc, cid);
-                println!("{i}: reading/deserializing json response at {url}..");
-                let course_sections = get_section_info(&client, tc, sc, cid).await?;
-
-                if print {
-                    report_course_sections(&course_sections);
-                    println!();
-                }
-            } else {
-                println!("(skipped line {}; was malformed)", i);
-            }
         }
     }
     Ok(())
